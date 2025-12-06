@@ -1,0 +1,25 @@
+{
+  "name": "opencode-minecraft-bot",
+  "description": "A Minecraft bot powered by OpenCode that can write its own behaviors",
+  "module": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun run --watch src/index.ts",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/pngjs": "^6.0.5"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.0.114",
+    "@types/node": "^20.0.0",
+    "mineflayer": "^4.33.0",
+    "mineflayer-pathfinder": "^2.4.5",
+    "pngjs": "^7.0.0"
+  }
+}
