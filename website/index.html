@@ -15,9 +15,9 @@
         <section class="hero">
             <div class="container hero-content">
                 <h1>OpenCode Minecraft Bot</h1>
-                <p>A next-generation Minecraft bot that writes its own code on the fly.</p>
+                <p>A completely hackable, docker-compose Minecraft bot that writes its own code on the fly.</p>
                 <p>Powered by <a href="https://bun.sh" target="_blank">Bun</a> and <a href="https://opencode.ai" target="_blank">OpenCode</a>.</p>
-                <a href="https://github.com/yourusername/opencode-minecraft-bot" class="btn">View on GitHub</a>
+                <a href="https://github.com/bcjordan/bun-ai-minecraft" class="btn">View on GitHub</a>
             </div>
         </section>
 
@@ -48,15 +48,26 @@
             <div class="container">
                 <h2>Get Started</h2>
                 <div class="feature-card" style="max-width: 800px; margin: 0 auto;">
+                    <h3>Prerequisites</h3>
+                    <ul style="list-style: none; margin-bottom: 1rem; color: #94a3b8;">
+                        <li>• Bun (runtime)</li>
+                        <li>• OpenCode CLI (log in locally)</li>
+                        <li>• Minecraft Server (1.8 - 1.20.x)</li>
+                    </ul>
+
                     <h3>Installation</h3>
                     <p>Clone the repository and install dependencies:</p>
-                    <pre><code>git clone https://github.com/yourusername/opencode-minecraft-bot.git
-cd opencode-minecraft-bot
+                    <pre><code>git clone https://github.com/bcjordan/bun-ai-minecraft.git
+cd bun-ai-minecraft
 bun install</code></pre>
                     
                     <h3>Configuration</h3>
                     <p>Set up your environment variables:</p>
                     <pre><code>cp .env.example .env</code></pre>
+                    <p style="margin-top: 1rem; font-size: 0.9rem; color: #94a3b8;">
+                        Edit <code>.env</code>: Set <code>MC_HOST</code> (default localhost) and <code>MC_PORT</code>. 
+                        <code>OPENCODE_API_KEY</code> is optional if logged in locally.
+                    </p>
                     
                     <h3>Run</h3>
                     <pre><code>bun run start</code></pre>
@@ -67,7 +78,7 @@ bun install</code></pre>
 
     <footer>
         <div class="container">
-            <p>&copy; 2025 OpenCode Minecraft Bot. Open Source under MIT License.</p>
+            <p>&copy; 2025 OpenCode Minecraft Bot.</p>
         </div>
     </footer>
 </body>
