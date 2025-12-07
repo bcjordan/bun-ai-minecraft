@@ -50,27 +50,25 @@
                 <div class="feature-card" style="max-width: 800px; margin: 0 auto;">
                     <h3>Prerequisites</h3>
                     <ul style="list-style: none; margin-bottom: 1rem; color: #94a3b8;">
-                        <li>• Bun (runtime)</li>
+                        <li>• Docker & Docker Compose</li>
                         <li>• OpenCode CLI (log in locally)</li>
-                        <li>• Minecraft Server (1.8 - 1.20.x)</li>
                     </ul>
 
                     <h3>Installation</h3>
-                    <p>Clone the repository and install dependencies:</p>
+                    <p>Clone the repository:</p>
                     <pre><code>git clone https://github.com/bcjordan/bun-ai-minecraft.git
-cd bun-ai-minecraft
-bun install</code></pre>
+cd bun-ai-minecraft</code></pre>
                     
                     <h3>Configuration</h3>
                     <p>Set up your environment variables:</p>
                     <pre><code>cp .env.example .env</code></pre>
                     <p style="margin-top: 1rem; font-size: 0.9rem; color: #94a3b8;">
-                        Edit <code>.env</code>: Set <code>MC_HOST</code> (default localhost) and <code>MC_PORT</code>. 
-                        <code>OPENCODE_API_KEY</code> is optional if logged in locally.
+                        Edit <code>.env</code>: Set <code>MC_HOST</code> (use <code>host.docker.internal</code> for local server) and <code>MC_PORT</code>.
                     </p>
                     
                     <h3>Run</h3>
-                    <pre><code>bun run start</code></pre>
+                    <p>Start the bot and OpenCode server:</p>
+                    <pre><code>docker-compose up --build</code></pre>
                 </div>
             </div>
         </section>
