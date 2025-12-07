@@ -1,6 +1,6 @@
 import { tool } from "@opencode-ai/plugin";
 
-const BOT_API_URL = process.env.BOT_API_URL || 'http://localhost:3000';
+const BOT_API_URL = process.env.BOT_API_URL || 'http://bot:3000';
 
 /**
  * Send a chat message through the Minecraft bot

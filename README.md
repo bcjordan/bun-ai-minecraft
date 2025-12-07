@@ -99,8 +99,11 @@ docker-compose up --build
 
 This will:
 1.  Start the OpenCode server container (listening on port 4096).
-2.  Start the Bot container.
-3.  Connect the Bot to the OpenCode server and your Minecraft server.
+2.  Start a local Minecraft Server (version 1.20.4) and a backup service.
+3.  Start a Redis server for audit logging.
+4.  Start the Bot container and connect it to the local server.
+
+The server data will be persisted in `minecraft-data/`, backups in `minecraft-backups/`, and Redis data in `redis-data/`.
 
 ### Troubleshooting
 
@@ -113,3 +116,12 @@ This will:
     - Ensure you are logged in locally (`opencode auth status`).
     - Check that the `opencode` service in Docker is running and healthy.
     - Verify `MC_HOST` is reachable from within the container.
+
+### Known Issues
+
+- **LAN Discovery on macOS**:
+    - You might expect the server to automatically appear in your "Multiplayer" > "LAN Worlds" list.
+    - **This does not work on Docker Desktop for Mac.**
+    - Docker on Mac runs inside a hidden Linux VM. The "multicast" packets used for LAN discovery cannot escape this VM to reach your Mac's game client.
+    - **Solution**: Click "Add Server" and enter `localhost` as the address. The server is running, it just can't "shout" loud enough to be heard automatically.
+    - *Note: Using `network_mode: host` (the "dangerous" option) does not fix this on Mac for the same reason (it binds to the VM, not your Mac).*

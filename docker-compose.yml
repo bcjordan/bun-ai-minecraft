@@ -18,17 +18,56 @@ services:
       # Binds ONLY to localhost. External IPs cannot access this port.
       - "127.0.0.1:4096:4096"
 
+  mc:
+    image: itzg/minecraft-server
+    tty: true
+    stdin_open: true
+    ports:
+      - "25565:25565"
+    environment:
+      EULA: "TRUE"
+      VERSION: "1.20.4"
+      ONLINE_MODE: "FALSE"
+      MOTD: "§9OpenCode §fMinecraft §7(Docker)"
+      SERVER_NAME: "OpenCode Server"
+    volumes:
+      - ./minecraft-data:/data
+
+  backups:
+    image: itzg/mc-backup
+    environment:
+      BACKUP_INTERVAL: "24h"
+      RCON_HOST: mc
+    volumes:
+      - ./minecraft-data:/data:ro
+      - ./minecraft-backups:/backups
+    depends_on:
+      - mc
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - ./redis-data:/data
+    command: redis-server --appendonly yes
+
   bot:
     build: .
     volumes:
       - .:/app
     environment:
-      - MC_HOST=host.docker.internal
-      - MC_PORT=9999
+      - MC_HOST=mc
+      - MC_PORT=25565
       - OPENCODE_URL=http://opencode:4096
       - SKIP_OPENCODE_SERVER=true
       - OPENCODE_API_KEY=${OPENCODE_API_KEY}
       - OPENCODE_PROVIDER=${OPENCODE_PROVIDER}
       - OPENCODE_MODEL=${OPENCODE_MODEL}
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "3000:3000"
     depends_on:
       - opencode
+      - mc
+      - redis

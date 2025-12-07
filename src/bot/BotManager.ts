@@ -36,7 +36,6 @@ export class BotManager extends EventEmitter {
         });
 
         this.bot.on('chat', (username, message) => {
-            if (username === this.bot?.username) return;
             this.emit('chat', username, message);
         });
 

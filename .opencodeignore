@@ -5,3 +5,6 @@ coverage
 logs
 .DS_Store
 .env
+minecraft-data
+minecraft-backups
+redis-data

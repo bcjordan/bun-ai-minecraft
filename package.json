@@ -20,6 +20,7 @@
     "@types/node": "^20.0.0",
     "mineflayer": "^4.33.0",
     "mineflayer-pathfinder": "^2.4.5",
-    "pngjs": "^7.0.0"
+    "pngjs": "^7.0.0",
+    "redis": "^4.6.13"
   }
 }

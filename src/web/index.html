@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenCode Bot Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --panel-bg: #0a0a0a;
+            --border: #333;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888;
+            --accent: #00f0ff; /* Cyan */
+            --accent-dim: rgba(0, 240, 255, 0.1);
+            --success: #00ff9d;
+            --warning: #ffb000;
+            --error: #ff3333;
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            font-size: 14px;
+        }
+
+        /* Header - Utilitarian */
+        header {
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 0 1.5rem;
+            height: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .logo { font-weight: 700; display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary); }
+        .logo span { color: var(--accent); }
+
+        .status-badge {
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--success);
+            border: 1px solid var(--success);
+            padding: 2px 8px;
+            border-radius: 2px;
+        }
+        .status-dot { width: 6px; height: 6px; background: currentColor; border-radius: 50%; }
+
+        /* Layout */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 280px 1fr 350px;
+            grid-template-rows: 1fr 150px;
+            gap: 1px;
+            background: var(--border);
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            grid-row: 1 / -1;
+            background: var(--panel-bg);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            font-family: var(--font-mono);
+        }
+
+        .stat-card {
+            border: 1px solid var(--border);
+            padding: 1rem;
+            background: var(--bg-color);
+        }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+        .stat-label { color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; margin-top: 0.25rem; }
+
+        .chart-container {
+            border: 1px solid var(--border);
+            padding: 1rem;
+            background: var(--bg-color);
+            height: 200px;
+        }
+
+        /* Feed */
+        .feed-container {
+            grid-column: 2;
+            grid-row: 1;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .feed-header {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--panel-bg);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .feed-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        /* Log Entries */
+        .log-entry {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .log-entry:hover { background: #111; }
+        .log-entry.selected { background: #161616; border-color: var(--border); }
+        .log-entry.hovered { background: #1a1a1a; border-color: var(--accent); }
+
+        /* Chat Style (Human) */
+        .log-entry.is-chat {
+            border-left: 2px solid var(--text-secondary);
+            background: rgba(255, 255, 255, 0.02);
+            margin-bottom: 0.5rem;
+        }
+        .log-entry.is-chat .log-content { font-family: var(--font-main); }
+        .log-entry.is-chat .log-user { color: var(--accent); font-weight: 600; }
+        .log-entry.is-chat .log-message { font-size: 1rem; color: #fff; margin-top: 0.25rem; }
+
+        /* System Style (Machine) */
+        .log-entry.is-system {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
+            border-left: 2px solid var(--border);
+        }
+        .log-entry.is-system .log-header { display: flex; align-items: baseline; gap: 0.75rem; }
+        .log-entry.is-system .log-type { color: var(--warning); text-transform: uppercase; font-size: 0.7rem; width: 60px; }
+        .log-entry.is-system .log-message { color: var(--text-secondary); }
+        .log-entry.is-system.type-execute .log-type { color: var(--success); }
+        .log-entry.is-system.type-error .log-type { color: var(--error); }
+
+        /* Details Panel */
+        .details-panel {
+            grid-column: 3;
+            grid-row: 1 / -1;
+            background: var(--panel-bg);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            font-family: var(--font-mono);
+        }
+        .details-header {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .details-content { padding: 1rem; overflow-y: auto; flex: 1; }
+        
+        .detail-row { margin-bottom: 1.5rem; }
+        .detail-label { color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; margin-bottom: 0.25rem; }
+        .detail-value { color: var(--text-primary); font-size: 0.9rem; word-break: break-all; }
+
+        .json-viewer {
+            background: var(--bg-color);
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        /* Timeline */
+        .timeline-container {
+            grid-column: 2;
+            grid-row: 2;
+            background: var(--panel-bg);
+            border-top: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .timeline-header {
+            display: flex; justify-content: space-between; margin-bottom: 0.25rem;
+            font-size: 0.7rem; color: var(--text-secondary); font-family: var(--font-mono); text-transform: uppercase;
+        }
+        canvas#timelineCanvas { width: 100%; height: 100%; cursor: crosshair; }
+        .now-indicator {
+            position: absolute; top: 0; bottom: 0; right: 2rem;
+            width: 1px; background: var(--error); pointer-events: none; z-index: 5;
+        }
+        .now-label {
+            position: absolute; top: 0.25rem; right: 2.2rem;
+            color: var(--error); font-size: 0.6rem; font-family: var(--font-mono); font-weight: 700;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--border); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">OPENCODE<span>BOT</span></div>
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            SYSTEM ONLINE
+        </div>
+    </header>
+
+    <main>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="stat-card">
+                <div class="stat-value" id="total-events">0</div>
+                <div class="stat-label">Total Events</div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="eventChart"></canvas>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-value" id="active-behaviors">0</div>
+                <div class="stat-label">Active Behaviors</div>
+            </div>
+        </aside>
+
+        <!-- Feed -->
+        <section class="feed-container">
+            <div class="feed-header">
+                <div class="feed-title">Mission Log</div>
+                <div style="color: var(--success);">LIVE FEED</div>
+            </div>
+            <div class="feed-list" id="feed-list">
+                <!-- Logs injected here -->
+            </div>
+        </section>
+
+        <!-- Timeline -->
+        <section class="timeline-container">
+            <div class="timeline-header">
+                <span>T-Minus 5 Minutes</span>
+                <span>Current</span>
+            </div>
+            <canvas id="timelineCanvas"></canvas>
+            <div class="now-indicator"></div>
+            <div class="now-label">NOW</div>
+        </section>
+
+        <!-- Details Panel -->
+        <aside class="details-panel">
+            <div class="details-header">Telemetry Details</div>
+            <div class="details-content" id="details-content">
+                <div style="color: var(--text-secondary); text-align: center; margin-top: 2rem; font-size: 0.8rem;">
+                    AWAITING SELECTION
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <script>
+        // ... (Types and State remain the same) ...
+        const state = {
+            events: [],
+            renderedIds: new Set(),
+            selectedEvent: null,
+            hoverEvent: null,
+            lastFetch: 0
+        };
+
+        // Chart Setup (Updated Colors)
+        const ctx = document.getElementById('eventChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Chat', 'Bot', 'Cmd', 'Code', 'Event'],
+                datasets: [{
+                    data: [0, 0, 0, 0, 0],
+                    backgroundColor: ['#00f0ff', '#00ff9d', '#ffb000', '#bd00ff', '#ff3333'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                cutout: '80%'
+            }
+        });
+
+        // ... (Timeline Setup & Interaction code remains mostly the same, just updated drawing styles) ...
+        const timelineCanvas = document.getElementById('timelineCanvas');
+        const tCtx = timelineCanvas.getContext('2d');
+        
+        function resizeTimeline() {
+            const rect = timelineCanvas.getBoundingClientRect();
+            timelineCanvas.width = rect.width;
+            timelineCanvas.height = rect.height;
+        }
+        window.addEventListener('resize', resizeTimeline);
+        resizeTimeline();
+
+        // Timeline Interaction
+        timelineCanvas.addEventListener('mousemove', (e) => {
+            const rect = timelineCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const w = timelineCanvas.width;
+            const now = Date.now();
+            const timeWindow = 5 * 60 * 1000;
+            const startTime = now - timeWindow;
+            const hoverTime = startTime + (x / w) * timeWindow;
+            
+            let closest = null;
+            let minDiff = Infinity;
+            
+            state.events.forEach(ev => {
+                if (ev.timestamp < startTime) return;
+                const diff = Math.abs(ev.timestamp - hoverTime);
+                if (diff < minDiff && diff < 5000) { // 5s threshold
+                    minDiff = diff;
+                    closest = ev;
+                }
+            });
+
+            if (closest !== state.hoverEvent) {
+                state.hoverEvent = closest;
+                
+                // Highlight in list
+                document.querySelectorAll('.log-entry').forEach(el => el.classList.remove('hovered'));
+                if (closest) {
+                    const el = document.querySelector(`.log-entry[data-id="${closest.id}"]`);
+                    if (el) {
+                        el.classList.add('hovered');
+                        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                    renderDetails(closest);
+                    timelineCanvas.style.cursor = 'pointer';
+                } else {
+                    if (state.selectedEvent) renderDetails(state.selectedEvent);
+                    else document.getElementById('details-content').innerHTML = '<div style="color: var(--text-secondary); text-align: center; margin-top: 2rem; font-size: 0.8rem;">AWAITING SELECTION</div>';
+                    timelineCanvas.style.cursor = 'crosshair';
+                }
+                drawTimeline();
+            }
+        });
+
+        timelineCanvas.addEventListener('mouseleave', () => {
+            state.hoverEvent = null;
+            document.querySelectorAll('.log-entry').forEach(el => el.classList.remove('hovered'));
+            if (state.selectedEvent) renderDetails(state.selectedEvent);
+            else document.getElementById('details-content').innerHTML = '<div style="color: var(--text-secondary); text-align: center; margin-top: 2rem; font-size: 0.8rem;">AWAITING SELECTION</div>';
+            drawTimeline();
+        });
+
+        // ... (Click listener remains same) ...
+        timelineCanvas.addEventListener('click', () => {
+            if (state.hoverEvent) selectEvent(state.hoverEvent);
+        });
+
+        // ... (API Calls remain same) ...
+
+        // ... (formatTime, appendLog, scrollToBottom, selectEvent, renderDetails remain same) ...
+
+        function drawTimeline() {
+            const w = timelineCanvas.width;
+            const h = timelineCanvas.height;
+            tCtx.clearRect(0, 0, w, h);
+            
+            // Grid
+            tCtx.strokeStyle = '#222';
+            tCtx.lineWidth = 1;
+            tCtx.beginPath();
+            tCtx.moveTo(0, h/2);
+            tCtx.lineTo(w, h/2);
+            tCtx.stroke();
+
+            const now = Date.now();
+            const timeWindow = 5 * 60 * 1000;
+            const startTime = now - timeWindow;
+
+            state.events.forEach(ev => {
+                if (ev.timestamp < startTime) return;
+                const x = ((ev.timestamp - startTime) / timeWindow) * w;
+                const y = h/2;
+                
+                const isHovered = state.hoverEvent && state.hoverEvent.id === ev.id;
+                const isSelected = state.selectedEvent && state.selectedEvent.id === ev.id;
+
+                // Colors matching Pie Chart
+                let color = '#555';
+                if (ev.type === 'chat') color = '#00f0ff';       // Cyan
+                if (ev.type === 'bot_chat') color = '#00ff9d';   // Green
+                if (ev.type === 'command') color = '#ffb000';    // Amber
+                if (ev.type === 'execute') color = '#bd00ff';    // Purple
+                if (ev.type === 'bot_event') color = '#ff3333';  // Red
+                
+                tCtx.fillStyle = color;
+                tCtx.beginPath();
+                
+                if (isHovered || isSelected) {
+                    tCtx.arc(x, y, 5, 0, Math.PI * 2);
+                    tCtx.fill();
+                    tCtx.strokeStyle = '#fff';
+                    tCtx.lineWidth = 1.5;
+                    tCtx.stroke();
+                    
+                    // Crosshair line
+                    tCtx.strokeStyle = 'rgba(255,255,255,0.2)';
+                    tCtx.beginPath();
+                    tCtx.moveTo(x, 0);
+                    tCtx.lineTo(x, h);
+                    tCtx.stroke();
+                } else {
+                    // Plot all events as small dots/rects
+                    if (ev.type === 'chat' || ev.type === 'bot_chat') {
+                        tCtx.arc(x, y, 2, 0, Math.PI * 2);
+                        tCtx.fill();
+                    } else {
+                        tCtx.fillRect(x-1, y-2, 2, 4);
+                    }
+                }
+            });
+        }
+
+        setInterval(() => { fetchStats(); fetchLogs(); drawTimeline(); }, 1000);
+        fetchStats(); fetchLogs();
+    </script>
+</body>
+</html>
+    </script>
+</body>
+</html>

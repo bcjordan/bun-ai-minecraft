@@ -1,12 +1,12 @@
-
 import { BotManager } from './bot/BotManager';
 import { HotLoader } from './system/HotLoader';
-import { CodeQueue } from './system/CodeQueue';
 import { OpenCodeBridge } from './bridge/OpenCodeBridge';
 import { OpenCodeClient } from './bridge/OpenCodeClient';
 import { OpenCodeServer } from './bridge/OpenCodeServer';
 import { botRegistry } from './system/BotRegistry';
 import { BotAPIServer } from './api/BotAPIServer';
+import { commandDispatcher } from './system/CommandDispatcher';
+import { auditLogger } from './system/AuditLogger';
 import { join } from 'path';
 
 const BOT_USERNAME = process.env.MC_USERNAME || 'OpenCodeBot';
@@ -90,6 +90,11 @@ botManager.on('spawn', async (bot) => {
     botRegistry.registerBot(bot, hotLoader);
     console.log('Bot registered!');
 
+    // Initialize CommandDispatcher for programmatic command execution
+    console.log('Initializing CommandDispatcher...');
+    commandDispatcher.setBot(bot);
+    console.log('CommandDispatcher initialized!');
+
     // Start API Server for OpenCode tools
     console.log('Starting BotAPIServer...');
     const apiServer = new BotAPIServer(bot, hotLoader, 3000);
@@ -103,13 +108,30 @@ botManager.on('spawn', async (bot) => {
 
     // Bridge disabled - using OpenCode custom tools instead
     chatListener = (username, message) => {
+        // Log bot's own messages separately
+        if (username === bot.username) {
+            auditLogger.logBotChat(username, message);
+            return; // Don't forward bot's own messages to the bridge
+        }
+        // Log all chat to audit log
+        auditLogger.logChat(username, message);
         bridge.handleChat(username, message);
     };
     botManager.on('chat', chatListener);
+    
+    // Log bot spawn event
+    auditLogger.logBotEvent('spawn', { username: bot.username });
 
     } catch (error) {
         console.error('Error in spawn handler:', error);
     }
+});
+
+// Initialize audit logger
+auditLogger.connect().then(() => {
+    console.log('Audit logger initialized');
+}).catch((err: Error) => {
+    console.error('Failed to initialize audit logger:', err.message);
 });
 
 console.log(`Starting bot... connecting to ${HOST}:${PORT}`);

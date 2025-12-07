@@ -1,5 +1,7 @@
 import { Bot } from 'mineflayer';
 import { HotLoader } from '../system/HotLoader';
+import { auditLogger } from '../system/AuditLogger';
+import { join } from 'path';
 
 export class BotAPIServer {
     private bot: Bot;
@@ -16,9 +18,28 @@ export class BotAPIServer {
                 const url = new URL(req.url);
                 
                 try {
+                    // Serve Dashboard
+                    if (url.pathname === '/dashboard') {
+                        return new Response(Bun.file(join(process.cwd(), 'src/web/index.html')));
+                    }
+
+                    // Audit API: Stats
+                    if (url.pathname === '/api/audit/stats' && req.method === 'GET') {
+                        const stats = await auditLogger.getStats();
+                        return Response.json(stats);
+                    }
+
+                    // Audit API: Logs
+                    if (url.pathname === '/api/audit/logs' && req.method === 'GET') {
+                        const limit = parseInt(url.searchParams.get('limit') || '50');
+                        const logs = await auditLogger.getEvents(limit);
+                        return Response.json(logs);
+                    }
+
                     if (url.pathname === '/api/chat' && req.method === 'POST') {
                         const body = await req.json();
                         this.bot.chat(body.message);
+                        auditLogger.log('bot_chat', { username: this.bot.username, message: body.message });
                         return Response.json({ success: true });
                     }
 
