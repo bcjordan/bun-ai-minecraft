@@ -12,6 +12,7 @@ A Minecraft bot powered by [Bun](https://bun.sh) and [OpenCode](https://opencode
 
 - [Bun](https://bun.sh/) (runtime)
 - [OpenCode](https://opencode.ai) (CLI tool)
+    - Log in locally with some provider 
 - A Minecraft Server (supports versions compatible with Mineflayer, typically 1.8 - 1.20.x)
 
 ## Installation
@@ -32,10 +33,10 @@ A Minecraft bot powered by [Bun](https://bun.sh) and [OpenCode](https://opencode
     cp .env.example .env
     ```
     Edit `.env` with your settings:
-    - `MC_HOST`: Your Minecraft server address.
-    - `MC_PORT`: Your Minecraft server port.
-    - `OPENCODE_API_KEY`: Your API key for the LLM provider (e.g., Anthropic, OpenAI).
-    - `OPENCODE_BIN`: Path to your `opencode` binary if it's not in your PATH.
+    - `MC_HOST`: Desired Minecraft server address (default localhost)
+    - `MC_PORT`: Desired Minecraft server port.
+    - (OPTIONAL) `OPENCODE_API_KEY`: Your API key for the LLM provider (e.g., Anthropic, OpenAI).
+    - (OPTIONAL) `OPENCODE_BIN`: Path to your `opencode` binary if it's not in your PATH.
 
 ## Usage
 
